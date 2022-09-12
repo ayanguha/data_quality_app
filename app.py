@@ -17,96 +17,45 @@ import random
 
 app = dash.Dash(
     __name__,
-    url_base_pathname='/dev/',
+    routes_pathname_prefix="/dash/",
+    requests_pathname_prefix="/dev/dash/",
     meta_tags=[{"name": "viewport", "content": "width=device-width"}],
 )
 app.title = "Data Quality Framework"
 #app.server.secret_key = os.environ.get('secret_key', 'secret')
 server = app.server
 
-domains = 10
-
-# Dictionary of Domains
-list_of_domains = [ "domain_" + str(d) for d in range(domains)]
-list_of_dimensions = ['Completeness', 'Conformity', 'Consistency', 'Integrity', 'Timeliness', 'Uniqueness']
-
-# Initialize data frame
-def base_data():
-    today = datetime.today()
-    start = today - timedelta(days=30)
-    end = today - timedelta(days=1)
-    dt = start
-    df = []
-
-    while dt <= end:
-        mld = model_level_data()
-        for m in mld:
-            m['run_date'] = dt.strftime('%Y-%m-%d')
-            m['run_date_sort'] = dt.strftime('%Y%m%d')
-
-            df.append(m)
-        dt = dt + timedelta(days=1)
-    print(m)
-    return df
-
-def model_level_data():
-
-    models = 500
-    df = []
-
-    for m in range(models):
-        domain = m%domains
-        domain_name = "domain_" + str(domain)
-
-        pass_val = random.randint(20,50)
-        fail_val = random.randint(20,50)
-        model_name = "model_" + str(m)
-
-        dimension = random.choice(list_of_dimensions)
-        df.append({'status': 'Pass','value': pass_val,'dimension': dimension,'domain': domain_name,'model': model_name})
-        df.append({'status': 'Fail','value': fail_val,'dimension': dimension,'domain': domain_name,'model': model_name})
-
-    return df
-
-def domain_dimesion():
-
-    domains = 10
-    df = []
-    for d in range(domains):
-        domains_name = "domain_" + str(d)
-        for dim in list_of_dimensions:
-            pass_val = round(random.random(),2)
-            fail_val = 1 - pass_val
-            token = {'status': 'Pass', 'value': pass_val, 'dimension': dim, 'domain': domains_name}
-            df.append(token)
-            token = {'status': 'Fail', 'value': fail_val, 'dimension': dim, 'domain': domains_name}
-            df.append(token)
+data = pd.read_csv('data.csv',sep='|')
+list_of_domains = data['domain'].unique().tolist()
 
 
-    return df
 
-data = domain_dimesion()
-model_data = model_level_data()
-base_data = base_data()
+card1 = dbc.Card(
+            [dbc.CardBody(
+                         [
+                         html.H2("Total Number of Tests", id="card_hdr11"),
+                         html.H4("Card Data 1", id="card_data11"),
+                         html.H2("Passed", id="card_hdr12"),
+                         html.H4("Card Data 2", id="card_data12"),
+                         html.H2("Failed", id="card_hdr13"),
+                         html.H4("Card Data 2", id="card_data13")
+                         ]
+                     ),
+            ] ,style={"width": "18rem"}
+            )
+card2 = dbc.Card(
+            [dbc.CardBody(
+                         [
+                         html.H2("Total Execution Time", id="card_hdr21"),
+                         html.H4("Card Data 1", id="card_data21"),
+                         html.H2("Card Header 2", id="card_hdr22"),
+                         html.H4("Domain", id="card_data22")
+                         ]
+                     ),
+            ] ,style={"width": "18rem"}
+            )
 
 
-card = dbc.Card(
-    [
-        dbc.CardBody(
-            [
-                html.H4("Card title", className="card-title"),
-                html.P(
-                    "Some quick example text to build on the card title and "
-                    "make up the bulk of the card's content.",
-                    className="card-text",
-                ),
-
-
-            ]
-        ),
-    ],
-    style={"width": "18rem"},
-)
 
 # Layout of Dash App
 app.layout = html.Div(
@@ -163,13 +112,7 @@ app.layout = html.Div(
 
                             ],
                         ),
-                        html.Div(
-                            card
-                        ),
-                        html.P(id="total-tests"),
-
-
-                    ],
+                        ],
                 ),
                 # Column for app graphs and plots
                 html.Div(
@@ -182,9 +125,14 @@ app.layout = html.Div(
                         (
                         children = [
                                     html.Div(
-                                        dcc.Graph(id="dimension-graph1" ),
+                                        card1,
                                         style={'display': 'inline-block'},
-                                        className="four columns  bg-grey",
+                                        className="two columns  bg-grey",
+                                    ),
+                                    html.Div(
+                                        card2,
+                                        style={'display': 'inline-block'},
+                                        className="two columns  bg-grey",
                                     ),
                                     html.Div(
                                         dcc.Graph(id="dimension-graph2" ),
@@ -215,52 +163,75 @@ app.layout = html.Div(
 
 
 @app.callback(
-    [ Output("dimension-graph1", "figure"),
+    [ Output("card_data11", "children"),
+      Output("card_data12", "children"),
+      Output("card_data13", "children"),
+      Output("card_data21", "children"),
+      Output("card_data22", "children"),
       Output("dimension-graph2", "figure"),
       Output("dimension-graph3", "figure"),
       Output("test-trend", "figure")
     ],
     [Input("domain-dropdown", "value")]
     )
-def update_pie_chart(domain):
-    color_discrete_map={'Pass':'green', 'Fail':'red'}
-    selected_data = [d for d in data if d['domain'] == domain]
+def update_chart(domain):
+    color_discrete_map={'Pass':'#50C878', 'Fail':'#C11B17'}
+    latest_date = data.run_date_time.max()
+    selected_base_data = data[data.domain == domain]
+    latest_data = selected_base_data[selected_base_data.run_date_time == latest_date]
 
-    fig1 = px.line_polar(selected_data,
-                   r="value", theta="dimension",
+    totals = latest_data.groupby(['run_date_time','dimension'])[['test_case_no']].count().reset_index().rename(columns={'test_case_no':'total_test_case_no'})
+    status_totals = latest_data.groupby(['run_date_time','dimension','status'])[['test_case_no']].count().reset_index()
+
+    dimension_view = status_totals.merge(totals, how='inner', on=['run_date_time','dimension'])
+    dimension_view['pct'] = round(dimension_view.test_case_no/dimension_view.total_test_case_no * 100,2)
+
+
+    fig2 = px.bar(dimension_view,
+                   x="pct", y="dimension",
                    color="status",
+                   orientation = 'h',
+                   barmode = 'group',
                    template="plotly_dark",
-                   line_close=True,
                    color_discrete_map=color_discrete_map,
                    title="Dimension-wise Quality Status")
 
-    fig2 = px.bar_polar(selected_data,
-                   r="value", theta="dimension",
-                   color="status",
-                   template="plotly_dark",
-                   color_discrete_map=color_discrete_map,
-                   title="Dimension-wise Quality Status")
-
-    selected_model_data = [d for d in model_data if d['domain'] == domain]
-
-    fig3 = px.bar(selected_model_data,
-                  x='value', y='model',
+    model_view = latest_data.groupby(['model', 'status'])[['test_case_no']].count().reset_index()
+    fig3 = px.bar(model_view,
+                  x='test_case_no', y='model',
                   color = 'status', color_discrete_map=color_discrete_map,
                   orientation = 'h',
                   template="plotly_dark",
                   title="Model-Level Quality Status")
 
-    selected_base_data = [d for d in base_data if d['domain'] == domain]
+    trend_view = selected_base_data.groupby(['run_date_time', 'status'])[['test_case_no']].count().reset_index()
 
-    fig4 = px.bar(selected_base_data,
-                  x='run_date', y='value',
+    fig4 = px.area(trend_view,
+                  x='run_date_time', y='test_case_no',
                   color = 'status', color_discrete_map=color_discrete_map,
                   template="plotly_dark",
-                  barmode='group',
                   title="Trend")
 
+    tdf = latest_data.groupby(['status'])[['test_case_no']].count().reset_index().rename(columns={'test_case_no':'total_test_case_no'})
+    failed = tdf[tdf.status == 'Fail'].reset_index().total_test_case_no[0]
+    passed = tdf[tdf.status == 'Pass'].reset_index().total_test_case_no[0]
+    total_tests = passed + failed
 
-    return [fig1, fig2, fig3, fig4]
+    latest_exec_time = latest_data.execution_time_in_seconds.sum()
+
+    card_data11 = html.P(f"{total_tests}", className="card-text")
+    card_data12 = html.P(f"{passed}", className="card-text")
+    card_data13 = html.P(f"{failed}", className="card-text")
+    card_data21 = html.P(f"{latest_exec_time}", className="card-text")
+    card_data22 = html.P(f"{domain}", className="card-text")
+
+
+    return [card_data11,
+            card_data12,
+            card_data13,
+            card_data21,
+            card_data22,
+            fig2, fig3, fig4]
 
 
 
