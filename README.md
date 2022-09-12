@@ -1,8 +1,8 @@
-# Dash Uber Rides Demo
+# Dash Data Quality Framework
 
 ## About this app
 
-This is a demo of the Dash interactive Python framework developed by [Plotly](https://plot.ly/).
+Dash Data Quality Framework
 
 ## How to run this app
 
@@ -21,7 +21,7 @@ the following:
 On Windows
 
 ```
-virtualenv venv 
+virtualenv venv
 \venv\scripts\activate
 ```
 
@@ -45,9 +45,6 @@ python app.py
 You can run the app on your browser at http://127.0.0.1:8050
 
 
-## Screenshots
-
-![demo.png](demo.png)
 
 ## Resources
 
