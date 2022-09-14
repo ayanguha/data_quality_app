@@ -17,8 +17,8 @@ import random
 
 app = dash.Dash(
     __name__,
-    routes_pathname_prefix="/dash/",
-    requests_pathname_prefix="/dev/dash/",
+    #routes_pathname_prefix="/dash/",
+    #requests_pathname_prefix="/dev/dash/",
     meta_tags=[{"name": "viewport", "content": "width=device-width"}],
 )
 app.title = "Data Quality Framework"
@@ -33,23 +33,20 @@ list_of_domains = data['domain'].unique().tolist()
 card1 = dbc.Card(
             [dbc.CardBody(
                          [
-                         html.H2("Total Number of Tests", id="card_hdr11"),
-                         html.H4("Card Data 1", id="card_data11"),
-                         html.H2("Passed", id="card_hdr12"),
-                         html.H4("Card Data 2", id="card_data12"),
-                         html.H2("Failed", id="card_hdr13"),
-                         html.H4("Card Data 2", id="card_data13")
+                         html.Div([html.H6("Total Number of Tests"),html.H4("Card Data 1", id="card_data11")], style={"border-style": "solid"}),
+                         html.Div(html.P()),
+                         html.Div([html.H6("Passed"), html.H4("Card Data 2", id="card_data12")], style={"border-style": "solid"}),
+                         html.Div(html.P()),
+                         html.Div([html.H6("Failed"),html.H4("Card Data 2", id="card_data13")], style={"border-style": "solid"})
                          ]
-                     ),
-            ] ,style={"width": "18rem"}
+                     )] ,style={"width": "18rem"}
             )
 card2 = dbc.Card(
             [dbc.CardBody(
                          [
-                         html.H2("Total Execution Time", id="card_hdr21"),
-                         html.H4("Card Data 1", id="card_data21"),
-                         html.H2("Card Header 2", id="card_hdr22"),
-                         html.H4("Domain", id="card_data22")
+                         html.Div([html.H6("Total Execution Time"), html.H4("Card Data 1", id="card_data21")], style={"border-style": "solid"}),
+                         html.Div(html.P()),
+                         html.Div([html.H6("Domain"),html.H4("Domain", id="card_data22")], style={"border-style": "solid"})
                          ]
                      ),
             ] ,style={"width": "18rem"}
@@ -219,11 +216,11 @@ def update_chart(domain):
 
     latest_exec_time = latest_data.execution_time_in_seconds.sum()
 
-    card_data11 = html.P(f"{total_tests}", className="card-text")
-    card_data12 = html.P(f"{passed}", className="card-text")
-    card_data13 = html.P(f"{failed}", className="card-text")
-    card_data21 = html.P(f"{latest_exec_time}", className="card-text")
-    card_data22 = html.P(f"{domain}", className="card-text")
+    card_data11 = html.H4(f"{total_tests}", className="card-text")
+    card_data12 = html.H4(f"{passed}", className="card-text")
+    card_data13 = html.H4(f"{failed}", className="card-text")
+    card_data21 = html.H4(f"{latest_exec_time}", className="card-text")
+    card_data22 = html.H4(f"{domain}", className="card-text")
 
 
     return [card_data11,

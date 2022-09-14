@@ -9,18 +9,30 @@ body {
   margin: 0;
   padding: 0;
 }
+
 h1, h2, h3, h4, h5 {
   font-family: "Open Sans";
   font-weight: bold;
   letter-spacing: 2.1px;
   font-size: 21px;
   padding-left: 12px;
+  color: #FF5733;
 }
+
+h6 {
+  font-family: "Open Sans";
+  font-weight: bold;
+  font-size: 16px;
+  padding-left: 12px;
+  color: #FF5733;
+}
+
 p {
   font-family: "Open Sans";
   font-weight: 400;
   font-size: 14px;
   padding-left: 12px;
+  color: #FF5733;
 }
 a {
   text-decoration: none;
